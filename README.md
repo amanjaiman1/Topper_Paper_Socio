@@ -11,6 +11,7 @@ It's a front-end-only [Next.js](https://nextjs.org) app. Your browser reads the 
 - **Filters**: Paper I / II, syllabus section (matched to the official UPSC syllabus), topper, questions only, has diagram, and sorting by relevance, rank, name or page.
 - **Shareable searches**: filters are kept in the URL (`?q=weber&paper=1&questions=1`).
 - **In-page preview**: open any answer in a side panel with an embedded Drive preview, or go straight to Drive at the right page.
+- **Drive link health**: many PDFs listed in the sheet aren't publicly shared any more, and Drive shows *"Sorry, the file you have requested does not exist"* for them. The site checks every copy from your browser and caches the result. By default it hides pages whose PDF can't be opened (you can still show them). When the sheet lists two IDs for the same file, it picks the one that works. The **Drive link health** panel lists the unshared files so the owner can set them to *Anyone with the link*.
 - **Toppers and Thinkers**: browse toppers by All India Rank and the most-cited thinkers. Spelling variants are merged (e.g. "Agarwal" and "Agrawal").
 - Keyboard shortcuts: `/` or `⌘K` focuses search, and `Esc` closes the preview.
 

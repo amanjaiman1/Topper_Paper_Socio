@@ -41,8 +41,19 @@ export interface Topper {
   files: string[];
 }
 
+export interface DriveFile {
+  name: string;
+  /** Candidate Drive IDs in sheet order (duplicates in the Links tab are kept). */
+  ids: string[];
+  topper: string;
+  topperKey: string;
+  rows: number;
+}
+
 export interface Dataset {
   rows: Row[];
+  /** Every answer-copy PDF referenced by at least one row, most-referenced first. */
+  files: DriveFile[];
   toppers: Topper[];
   sections: { name: string; paper: "Paper I" | "Paper II"; count: number }[];
   /** `key` is the lower-cased surname used for searching all spelling variants. */

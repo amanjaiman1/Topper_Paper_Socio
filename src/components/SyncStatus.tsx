@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { RotateCw } from "lucide-react";
+import { recheckBlocked } from "@/lib/driveHealth";
 import type { DatasetState } from "@/lib/useDataset";
 
 const ago = (t: number) => {
@@ -50,7 +51,10 @@ export default function SyncStatus({ ds, tone = "light" }: { ds: DatasetState; t
       <span>{label}</span>
       <button
         type="button"
-        onClick={ds.refresh}
+        onClick={() => {
+          ds.refresh();
+          recheckBlocked();
+        }}
         disabled={ds.syncing}
         aria-label="Re-sync from Google Sheets"
         title="Re-sync from Google Sheets"

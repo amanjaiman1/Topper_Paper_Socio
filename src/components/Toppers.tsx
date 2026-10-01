@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, EyeOff, Search } from "lucide-react";
+import { resolveLink, useLinksSettled } from "@/lib/driveHealth";
 import { UNATTRIBUTED } from "@/lib/dataset";
 import type { Dataset } from "@/lib/types";
+import { useDriveFiles } from "./driveContext";
 import { Avatar } from "./ui";
 
 const INITIAL = 12;
@@ -18,6 +20,23 @@ export default function Toppers({ data, onPick }: { data: Dataset | null; onPick
     return s ? t.filter((x) => `${x.name} ${x.air} ${x.coaching}`.toLowerCase().includes(s)) : t;
   }, [data, q]);
   const shown = all || q ? list : list.slice(0, INITIAL);
+
+  // How many of each topper's copies are publicly viewable on Drive (once checked).
+  const files = useDriveFiles();
+  const settled = useLinksSettled();
+  const viewable = useMemo(() => {
+    void settled;
+    const m = new Map<string, { ok: number; known: number; total: number }>();
+    for (const f of files.values()) {
+      const st = resolveLink(f.ids).status;
+      const e = m.get(f.topperKey) ?? { ok: 0, known: 0, total: 0 };
+      e.total++;
+      if (st !== "unknown") e.known++;
+      if (st === "ok") e.ok++;
+      m.set(f.topperKey, e);
+    }
+    return m;
+  }, [files, settled]);
 
   return (
     <section id="toppers" className="mx-auto max-w-7xl scroll-mt-24 px-6 py-24 sm:px-10 lg:px-14 lg:py-32">
@@ -44,38 +63,48 @@ export default function Toppers({ data, onPick }: { data: Dataset | null; onPick
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {!data &&
           Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton h-[148px] rounded-[24px]" />)}
-        {shown.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => onPick(t.key)}
-            className="group relative flex flex-col overflow-hidden rounded-[24px] border border-black/[0.06] bg-white p-5 text-left transition-all duration-500 ease-out-expo hover:-translate-y-1 hover:border-ink hover:bg-ink hover:text-white hover:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]"
-          >
-            <div className="flex items-start justify-between">
-              <Avatar
-                name={t.name}
-                className="size-12 text-[15px] transition-colors group-hover:from-white group-hover:to-neutral-300 group-hover:text-ink"
-              />
-              {t.air ? (
-                <span className="font-display text-3xl font-bold tracking-[-0.04em] text-ink/15 transition-colors group-hover:text-white/25">
-                  #{t.air}
+        {shown.map((t) => {
+          const v = viewable.get(t.key);
+          const partial = v && v.known === v.total && v.ok < v.total;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => onPick(t.key)}
+              className="group relative flex flex-col overflow-hidden rounded-[24px] border border-black/[0.06] bg-white p-5 text-left transition-all duration-500 ease-out-expo hover:-translate-y-1 hover:border-ink hover:bg-ink hover:text-white hover:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]"
+            >
+              <div className="flex items-start justify-between">
+                <Avatar
+                  name={t.name}
+                  className="size-12 text-[15px] transition-colors group-hover:from-white group-hover:to-neutral-300 group-hover:text-ink"
+                />
+                {t.air ? (
+                  <span className="font-display text-3xl font-bold tracking-[-0.04em] text-ink/15 transition-colors group-hover:text-white/25">
+                    #{t.air}
+                  </span>
+                ) : (
+                  <span className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink/25 group-hover:text-white/30">
+                    Aspirant
+                  </span>
+                )}
+              </div>
+              <p className="mt-5 truncate text-[16px] font-semibold">{t.name}</p>
+              <div className="mt-1 flex items-center justify-between text-[13px] text-ink/50 transition-colors group-hover:text-white/60">
+                <span className="truncate">
+                  {t.rows.toLocaleString("en-IN")} pages · {t.files.length} {t.files.length === 1 ? "copy" : "copies"}
+                  {t.coaching ? ` · ${t.coaching}` : ""}
                 </span>
-              ) : (
-                <span className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink/25 group-hover:text-white/30">
-                  Aspirant
-                </span>
+                <ArrowRight className="size-4 shrink-0 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+              </div>
+              {partial && (
+                <p className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-paper px-2.5 py-1 text-[11px] font-semibold text-ink/50 transition-colors group-hover:bg-white/10 group-hover:text-white/60">
+                  <EyeOff className="size-3" />
+                  {v.ok === 0 ? "PDFs not publicly shared" : `${v.ok} of ${v.total} copies viewable`}
+                </p>
               )}
-            </div>
-            <p className="mt-5 truncate text-[16px] font-semibold">{t.name}</p>
-            <div className="mt-1 flex items-center justify-between text-[13px] text-ink/50 transition-colors group-hover:text-white/60">
-              <span className="truncate">
-                {t.rows.toLocaleString("en-IN")} pages · {t.files.length} {t.files.length === 1 ? "copy" : "copies"}
-                {t.coaching ? ` · ${t.coaching}` : ""}
-              </span>
-              <ArrowRight className="size-4 shrink-0 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
-            </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
 
       {data && list.length === 0 && <p className="py-12 text-center text-ink/50">No topper matches &ldquo;{q}&rdquo;.</p>}
