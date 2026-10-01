@@ -71,8 +71,8 @@ export default function AnswerDrawer({
           <Avatar name={r.topper} className="size-11 text-sm" />
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold">{r.topper}</p>
-            <p className="flex flex-wrap items-center gap-x-2 text-[13px] text-ink/50">
-              {r.air && <span className="font-semibold text-ink">AIR {r.air}</span>}
+            <p className="flex flex-wrap items-center gap-x-2 text-[13px] text-copy/50">
+              {r.air && <span className="font-semibold text-copy">AIR {r.air}</span>}
               {r.coaching && <span>{r.coaching}</span>}
               {r.marks && <span>{r.marks} marks</span>}
               {page && <span>Page {page}</span>}
@@ -83,7 +83,7 @@ export default function AnswerDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close preview"
-            className="grid size-10 place-items-center rounded-full bg-ink/5 transition-colors hover:bg-ink hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
+            className="grid size-10 place-items-center rounded-full bg-ink/5 transition-colors hover:bg-ink hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <X className="size-5" />
           </button>
@@ -93,9 +93,9 @@ export default function AnswerDrawer({
           <div className="space-y-6 px-5 py-6 sm:px-7">
             <div className="flex flex-wrap gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em]">
               {r.qLabel && <span className="rounded-md bg-ink px-2 py-1 normal-case tracking-normal text-white">{r.qLabel}</span>}
-              {r.paper && <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-ink/60">{r.paper}</span>}
+              {r.paper && <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-copy/60">{r.paper}</span>}
               {r.section && r.section !== "Other" && (
-                <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-ink/60">{r.section}</span>
+                <span className="rounded-md border border-black/10 bg-white px-2 py-1 text-copy/60">{r.section}</span>
               )}
             </div>
 
@@ -106,7 +106,7 @@ export default function AnswerDrawer({
             {r.intro && (
               <div>
                 <Label>How they opened</Label>
-                <p className="mt-2 border-l-2 border-ink pl-4 text-[15px] leading-relaxed text-ink/75">
+                <p className="mt-2 border-l-2 border-ink pl-4 text-[15px] leading-relaxed text-copy/75">
                   <Highlight text={r.intro} words={words} />
                 </p>
               </div>
@@ -119,7 +119,7 @@ export default function AnswerDrawer({
                   {r.thinkers.map((t, i) => (
                     <span key={i} className="rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[13px]">
                       <span className="font-semibold">{t.name}</span>
-                      {t.concept && <span className="text-ink/50"> · {t.concept}</span>}
+                      {t.concept && <span className="text-copy/50"> · {t.concept}</span>}
                     </span>
                   ))}
                 </div>
@@ -140,7 +140,7 @@ export default function AnswerDrawer({
                   <Label>
                     <BookOpen className="mr-1 inline size-3" /> Syllabus
                   </Label>
-                  <p className="mt-2 text-[14px] leading-relaxed text-ink/70">{r.topic}</p>
+                  <p className="mt-2 text-[14px] leading-relaxed text-copy/70">{r.topic}</p>
                 </div>
               )}
             </div>
@@ -172,10 +172,10 @@ function PdfPreview({ row: r, page, onTopper }: { row: Row; page: string; onTopp
     <div className="px-3 pb-3 sm:px-4 sm:pb-4">
       <div className="overflow-hidden rounded-[22px] border border-black/[0.06] bg-white">
         <div className="flex items-center justify-between gap-3 border-b border-black/[0.06] px-4 py-3">
-          <p className="truncate text-[13px] text-ink/55">
+          <p className="truncate text-[13px] text-copy/55">
             {page ? (
               <>
-                Answer is on <span className="font-semibold text-ink">page {page}</span> of this copy
+                Answer is on <span className="font-semibold text-copy">page {page}</span> of this copy
               </>
             ) : (
               r.file
@@ -199,7 +199,7 @@ function PdfPreview({ row: r, page, onTopper }: { row: Row; page: string; onTopp
               <EyeOff className="size-6" />
             </span>
             <p className="mt-5 font-display text-xl font-bold tracking-[-0.01em]">This answer copy isn&rsquo;t publicly shared</p>
-            <p className="mt-2 max-w-md text-[14px] leading-relaxed text-ink/55">
+            <p className="mt-2 max-w-md text-[14px] leading-relaxed text-copy/55">
               Google Drive won&rsquo;t show this PDF to visitors. Its owner has restricted access or removed it, so it
               can&rsquo;t be previewed here. The question, opening and thinkers above still come from the index.
             </p>
@@ -217,17 +217,17 @@ function PdfPreview({ row: r, page, onTopper }: { row: Row; page: string; onTopp
                 href={driveViewUrl(link.id)}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-black/15 px-5 py-2.5 text-[13px] font-semibold text-ink/70 transition-colors hover:border-ink hover:text-ink"
+                className="inline-flex items-center gap-1.5 rounded-full border border-black/15 px-5 py-2.5 text-[13px] font-semibold text-copy/70 transition-colors hover:border-ink hover:text-copy"
               >
                 Try in Drive anyway <ArrowUpRight className="size-3.5" />
               </a>
             </div>
-            <p className="mt-4 text-[12px] text-ink/40">&ldquo;Try anyway&rdquo; only works if your Google account has been given access.</p>
+            <p className="mt-4 text-[12px] text-copy/40">&ldquo;Try anyway&rdquo; only works if your Google account has been given access.</p>
           </div>
         ) : (
           <div className="relative h-[72vh] bg-paper-2">
             {(!showFrame || !frameLoaded) && (
-              <div className="absolute inset-0 grid place-items-center text-ink/40">
+              <div className="absolute inset-0 grid place-items-center text-copy/40">
                 <div className="flex flex-col items-center gap-3">
                   <Loader2 className="size-6 animate-spin" />
                   {!showFrame && <p className="text-[13px]">Checking this copy on Google Drive…</p>}
@@ -253,7 +253,7 @@ function PdfPreview({ row: r, page, onTopper }: { row: Row; page: string; onTopp
 
 function Label({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
   return (
-    <p className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${dark ? "text-white/50" : "text-ink/40"}`}>
+    <p className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${dark ? "text-white/50" : "text-copy/40"}`}>
       {children}
     </p>
   );
