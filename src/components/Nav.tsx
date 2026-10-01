@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Search, Sheet } from "lucide-react";
-import { sheetUrl } from "@/lib/dataset";
+import { REPO_URL, sheetUrl } from "@/lib/dataset";
 import Logo from "./Logo";
 
 const LINKS = [
@@ -74,7 +74,7 @@ export default function Nav({ onSearch }: { onSearch: () => void }) {
             <Sheet className="size-[18px]" strokeWidth={2.2} />
           </a>
           <a
-            href="https://github.com/amanjaiman1/Socio_Top_Paper"
+            href={REPO_URL}
             target="_blank"
             rel="noreferrer"
             aria-label="View source on GitHub"

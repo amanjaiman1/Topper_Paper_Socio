@@ -24,7 +24,7 @@ npm run build    # static export to ./out
 
 ## Deploy
 
-`.github/workflows/deploy.yml` builds the static site and publishes it to **GitHub Pages** on every push to `main`. Turn it on once under **Settings → Pages → Source: GitHub Actions**. The site will then be at `https://<user>.github.io/Socio_Top_Paper/`.
+`.github/workflows/deploy.yml` builds the static site and publishes it to **GitHub Pages** on every push to `main`. Turn it on once under **Settings → Pages → Source: GitHub Actions**. The site will then be at `https://amanjaiman1.github.io/Topper_Paper_Socio/`.
 
 Because the output is static (`out/`), you can also host it on Vercel, Netlify or Cloudflare Pages without any config.
 

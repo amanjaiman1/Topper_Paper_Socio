@@ -1,5 +1,5 @@
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { sheetUrl } from "@/lib/dataset";
+import { REPO_URL, sheetUrl } from "@/lib/dataset";
 import Logo from "./Logo";
 
 const STEPS = [
@@ -50,7 +50,7 @@ export default function Footer({ onExplore }: { onExplore: () => void }) {
                 Source sheet <ArrowUpRight className="size-3.5" />
               </a>
               <a
-                href="https://github.com/amanjaiman1/Socio_Top_Paper"
+                href={REPO_URL}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 hover:text-white"

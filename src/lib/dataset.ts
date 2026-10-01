@@ -8,6 +8,7 @@ export const DRIVE_GID = "2085998453";
 export const sheetCsvUrl = (gid: string) =>
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
 export const sheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}`;
+export const REPO_URL = "https://github.com/amanjaiman1/Topper_Paper_Socio";
 export const driveViewUrl = (id: string) => `https://drive.google.com/file/d/${id}/view`;
 export const drivePreviewUrl = (id: string) => `https://drive.google.com/file/d/${id}/preview`;
 
