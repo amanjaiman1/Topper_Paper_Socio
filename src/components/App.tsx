@@ -4,15 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useDataset } from "@/lib/useDataset";
 import { EMPTY_FILTERS, filtersFromSearch, filtersToSearch, type Filters } from "@/lib/filters";
 import type { Row } from "@/lib/types";
-import Nav from "./Nav";
-import Hero from "./Hero";
-import Stats from "./Stats";
-import Explorer from "./Explorer";
-import Thinkers from "./Thinkers";
-import Toppers from "./Toppers";
-import Footer from "./Footer";
 import AnswerDrawer from "./AnswerDrawer";
 import { DriveFilesProvider } from "./driveContext";
+import Explorer from "./Explorer";
+import Footer from "./Footer";
+import Header from "./Header";
 import LinkHealth from "./LinkHealth";
 
 export default function App() {
@@ -33,55 +29,45 @@ export default function App() {
     window.history.replaceState(null, "", url);
   }, [filters, hydrated]);
 
+  const update = useCallback((patch: Partial<Filters>) => setFilters((f) => ({ ...f, ...patch })), []);
+  const reset = useCallback(() => setFilters(EMPTY_FILTERS), []);
   const closeDrawer = useCallback(() => setActive(null), []);
+  const openHealth = useCallback(() => setHealthOpen(true), []);
   const closeHealth = useCallback(() => setHealthOpen(false), []);
 
-  const update = useCallback((patch: Partial<Filters>) => setFilters((f) => ({ ...f, ...patch })), []);
-
-  const jumpToExplorer = useCallback((patch?: Partial<Filters>, focus = false) => {
-    if (patch) setFilters({ ...EMPTY_FILTERS, ...patch });
+  /** Apply a fresh search (keeps the PDF visibility preference) and bring the results into view. */
+  const searchFor = useCallback((patch: Partial<Filters>) => {
+    setFilters((f) => ({ ...EMPTY_FILTERS, unshared: f.unshared, ...patch }));
     document.getElementById("explore")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    if (focus) setTimeout(() => document.getElementById("search")?.focus({ preventScroll: true }), 450);
   }, []);
 
-  // Global shortcuts: "/" or ⌘K focuses search.
+  // "/" or ⌘K / Ctrl+K focuses search.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       const typing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
       if ((e.key === "/" && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) {
         e.preventDefault();
-        jumpToExplorer(undefined, true);
+        document.getElementById("search")?.focus();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [jumpToExplorer]);
+  }, []);
 
   return (
     <DriveFilesProvider data={ds.data}>
-      <Nav onSearch={() => jumpToExplorer(undefined, true)} />
+      <Header ds={ds} onThinker={(q) => searchFor({ q })} onHealth={openHealth} />
       <main>
-        <Hero ds={ds} onExplore={() => jumpToExplorer(undefined, true)} onSearch={(q) => jumpToExplorer({ q, onlyQ: true })} />
-        <Stats data={ds.data} onHealth={() => setHealthOpen(true)} />
-        <Explorer
-          ds={ds}
-          filters={filters}
-          update={update}
-          reset={() => setFilters(EMPTY_FILTERS)}
-          onOpen={setActive}
-          onHealth={() => setHealthOpen(true)}
-        />
-        <Thinkers data={ds.data} onPick={(q) => jumpToExplorer({ q })} />
-        <Toppers data={ds.data} onPick={(topper) => jumpToExplorer({ topper })} />
+        <Explorer ds={ds} filters={filters} update={update} reset={reset} onOpen={setActive} onHealth={openHealth} />
       </main>
-      <Footer onExplore={() => jumpToExplorer(undefined, true)} />
+      <Footer />
       <AnswerDrawer
         row={active}
         onClose={closeDrawer}
         onTopper={(topper) => {
           setActive(null);
-          jumpToExplorer({ topper });
+          searchFor({ topper });
         }}
         query={filters.q}
       />

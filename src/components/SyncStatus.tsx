@@ -42,7 +42,7 @@ export default function SyncStatus({ ds, tone = "light" }: { ds: DatasetState; t
   return (
     <div
       className={`inline-flex items-center gap-2.5 rounded-full border py-1.5 pl-3 pr-1.5 text-[12px] font-medium ${
-        dark ? "border-white/15 bg-white/[0.06] text-white/75" : "border-black/10 bg-white text-ink/70"
+        dark ? "border-white/15 bg-white/[0.06] text-white/75" : "border-black/10 bg-white text-copy/70"
       }`}
       role="status"
       aria-live="polite"

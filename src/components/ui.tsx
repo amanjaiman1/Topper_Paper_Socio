@@ -4,23 +4,24 @@ import type { ReactNode, SelectHTMLAttributes } from "react";
 export function Select({
   label,
   className = "",
+  size = "md",
   children,
   ...props
-}: SelectHTMLAttributes<HTMLSelectElement> & { label: string; children: ReactNode }) {
+}: Omit<SelectHTMLAttributes<HTMLSelectElement>, "size"> & { label: string; size?: "sm" | "md"; children: ReactNode }) {
   const active = Boolean(props.value);
   return (
     <label className={`relative inline-flex ${className}`}>
       <span className="sr-only">{label}</span>
       <select
         {...props}
-        className={`h-11 w-full cursor-pointer appearance-none truncate rounded-full border pl-4 pr-10 text-[14px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ink/30 ${
-          active ? "border-ink bg-ink text-white" : "border-black/10 bg-white text-ink hover:border-black/25"
+        className={`${size === "sm" ? "h-9 pl-3.5 pr-9 text-[13px]" : "h-11 pl-4 pr-10 text-[14px]"} w-full cursor-pointer appearance-none truncate rounded-full border font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 ${
+          active ? "border-ink bg-ink text-white" : "border-black/10 bg-white text-copy hover:border-black/25"
         }`}
       >
         {children}
       </select>
       <ChevronDown
-        className={`pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 ${active ? "text-white/70" : "text-ink/40"}`}
+        className={`pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 ${active ? "text-white/70" : "text-copy/40"}`}
       />
     </label>
   );
@@ -41,8 +42,8 @@ export function Toggle({
       role="switch"
       aria-checked={on}
       onClick={() => onChange(!on)}
-      className={`inline-flex h-11 shrink-0 items-center gap-2.5 whitespace-nowrap rounded-full border px-4 text-[14px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 ${
-        on ? "border-ink bg-ink text-white" : "border-black/10 bg-white text-ink hover:border-black/25"
+      className={`inline-flex h-11 shrink-0 items-center gap-2.5 whitespace-nowrap rounded-full border px-4 text-[14px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+        on ? "border-ink bg-ink text-white" : "border-black/10 bg-white text-copy hover:border-black/25"
       }`}
     >
       <span
@@ -82,8 +83,8 @@ export function Segmented<T extends string>({
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.value)}
-            className={`whitespace-nowrap rounded-full px-4 text-[14px] font-medium transition-all duration-300 ease-out-expo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 ${
-              on ? "bg-ink text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.5)]" : "text-ink/60 hover:text-ink"
+            className={`whitespace-nowrap rounded-full px-4 text-[14px] font-medium transition-all duration-300 ease-out-expo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+              on ? "bg-ink text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.5)]" : "text-copy/60 hover:text-copy"
             }`}
           >
             {o.label}

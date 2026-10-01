@@ -9,7 +9,6 @@ import type { DatasetState } from "@/lib/useDataset";
 import type { Row } from "@/lib/types";
 import AnswerCard from "./AnswerCard";
 import { useBlockedFiles } from "./driveContext";
-import SyncStatus from "./SyncStatus";
 import { Segmented, Select, Toggle } from "./ui";
 
 const PAGE = 40;
@@ -78,25 +77,13 @@ export default function Explorer({
   };
 
   return (
-    <section id="explore" className="scroll-mt-4 px-2 sm:px-3">
-      <div className="rounded-[28px] bg-white/60 py-16 ring-1 ring-black/[0.04] sm:rounded-[36px] lg:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12">
-          <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-ink/45">Explore</p>
-              <h2 className="mt-4 font-display text-4xl font-bold leading-[1.05] tracking-[-0.03em] sm:text-5xl">
-                Search the archive
-              </h2>
-            </div>
-            <div className="w-fit">
-              <SyncStatus ds={ds} />
-            </div>
-          </div>
-
+    <section id="explore" aria-label="Search answers" className="scroll-mt-2 px-2 sm:px-3">
+      <div className="pb-10 pt-1">
+        <div className="mx-auto max-w-6xl sm:px-5">
           {/* Toolbar */}
-          <div className="sticky top-[84px] z-30 -mx-1 mb-6 rounded-[26px] border border-black/[0.07] bg-white/85 p-2.5 shadow-[0_20px_50px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:top-[96px] sm:p-3">
+          <div className="sticky top-2 z-30 -mt-1 mb-5 rounded-[24px] border border-black/[0.07] bg-white/90 p-2.5 shadow-[0_18px_44px_-28px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:top-3 sm:p-3">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-5 top-1/2 size-5 -translate-y-1/2 text-ink/35" />
+              <Search className="pointer-events-none absolute left-5 top-1/2 size-5 -translate-y-1/2 text-copy/35" />
               <input
                 id="search"
                 type="search"
@@ -105,7 +92,7 @@ export default function Explorer({
                 placeholder="Search questions, thinkers, topics, toppers…"
                 autoComplete="off"
                 spellCheck={false}
-                className="h-14 w-full rounded-[20px] bg-paper pl-14 pr-24 text-[16px] font-medium outline-none ring-ink/20 transition-shadow placeholder:text-ink/35 focus:ring-2 [&::-webkit-search-cancel-button]:hidden"
+                className="h-14 w-full rounded-[18px] bg-paper pl-14 pr-12 sm:pr-24 text-[16px] font-medium text-copy outline-none ring-accent/35 transition-shadow placeholder:text-copy/40 focus:bg-white focus:ring-2 [&::-webkit-search-cancel-button]:hidden"
               />
               <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
                 {filters.q ? (
@@ -113,12 +100,12 @@ export default function Explorer({
                     type="button"
                     onClick={() => update({ q: "" })}
                     aria-label="Clear search"
-                    className="grid size-8 place-items-center rounded-full bg-ink/5 text-ink/60 transition-colors hover:bg-ink hover:text-white"
+                    className="grid size-8 place-items-center rounded-full bg-ink/5 text-copy/60 transition-colors hover:bg-ink hover:text-white"
                   >
                     <X className="size-4" />
                   </button>
                 ) : (
-                  <kbd className="hidden rounded-md border border-black/10 bg-white px-2 py-0.5 font-sans text-[12px] text-ink/40 sm:block">
+                  <kbd className="hidden rounded-md border border-black/10 bg-white px-2 py-0.5 font-sans text-[12px] text-copy/40 sm:block">
                     /
                   </kbd>
                 )}
@@ -175,9 +162,26 @@ export default function Explorer({
               <Toggle on={filters.onlyD} onChange={(onlyD) => update({ onlyD })}>
                 Has diagram
               </Toggle>
+            </div>
+          </div>
+
+          {/* Count */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-1">
+            <p className={`text-[14px] text-copy/55 transition-opacity ${stale ? "opacity-50" : ""}`} aria-live="polite">
+              {data ? (
+                <>
+                  <span className="font-semibold text-copy">{results.length.toLocaleString("en-IN")}</span> of{" "}
+                  {data.rows.length.toLocaleString("en-IN")} answer pages
+                </>
+              ) : (
+                "Loading the archive…"
+              )}
+            </p>
+            <div className="flex items-center gap-3">
               <Select
                 label="Sort"
-                className="w-[150px] shrink-0"
+                size="sm"
+                className="w-[132px] shrink-0"
                 value={filters.sort === "default" ? "" : filters.sort}
                 onChange={(e) => update({ sort: (e.target.value || "default") as SortKey })}
               >
@@ -186,27 +190,12 @@ export default function Explorer({
                 <option value="topper">Topper A–Z</option>
                 <option value="page">Page no.</option>
               </Select>
-            </div>
-          </div>
-
-          {/* Count */}
-          <div className="mb-5 flex items-center justify-between gap-4 px-1">
-            <p className={`text-[14px] text-ink/55 transition-opacity ${stale ? "opacity-50" : ""}`} aria-live="polite">
-              {data ? (
-                <>
-                  <span className="font-semibold text-ink">{results.length.toLocaleString("en-IN")}</span> of{" "}
-                  {data.rows.length.toLocaleString("en-IN")} answer pages
-                </>
-              ) : (
-                "Loading the archive…"
-              )}
-            </p>
             {nActive > 0 && (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={share}
-                  className="hidden items-center gap-1.5 text-[13px] font-medium text-ink/55 transition-colors hover:text-ink sm:inline-flex"
+                  className="hidden items-center gap-1.5 text-[13px] font-medium text-copy/55 transition-colors hover:text-copy sm:inline-flex"
                 >
                   {copied ? <Check className="size-3.5" /> : <Link2 className="size-3.5" />}
                   {copied ? "Link copied" : "Copy link"}
@@ -220,6 +209,7 @@ export default function Explorer({
                 </button>
               </div>
             )}
+            </div>
           </div>
 
           {/* Drive link health */}
@@ -228,7 +218,7 @@ export default function Explorer({
               <Loader2 className="size-4 shrink-0 animate-spin" />
               <span>
                 Checking which answer copies are publicly viewable on Google Drive…{" "}
-                <span className="tabular-nums text-ink/40">
+                <span className="tabular-nums text-copy/40">
                   {progress.done}/{progress.total}
                 </span>
               </span>
@@ -237,14 +227,14 @@ export default function Explorer({
             <Banner>
               <EyeOff className="size-4 shrink-0" />
               <span className="min-w-0 flex-1 basis-[220px]">
-                Hiding <b className="font-semibold text-ink">{hidden.toLocaleString("en-IN")}</b> matching pages whose PDF
+                Hiding <b className="font-semibold text-copy">{hidden.toLocaleString("en-IN")}</b> matching pages whose PDF
                 isn&rsquo;t publicly shared on Google Drive.
               </span>
               <span className="flex shrink-0 gap-3">
-                <button type="button" onClick={() => update({ unshared: true })} className="font-semibold text-ink underline-offset-4 hover:underline">
+                <button type="button" onClick={() => update({ unshared: true })} className="font-semibold text-copy underline-offset-4 hover:underline">
                   Show them
                 </button>
-                <button type="button" onClick={onHealth} className="font-semibold text-ink/60 underline-offset-4 hover:text-ink hover:underline">
+                <button type="button" onClick={onHealth} className="font-semibold text-copy/60 underline-offset-4 hover:text-copy hover:underline">
                   Which copies?
                 </button>
               </span>
@@ -253,7 +243,7 @@ export default function Explorer({
             <Banner>
               <EyeOff className="size-4 shrink-0" />
               <span className="min-w-0 flex-1 basis-[220px]">Including pages whose PDF isn&rsquo;t publicly shared — their links won&rsquo;t open.</span>
-              <button type="button" onClick={() => update({ unshared: false })} className="shrink-0 font-semibold text-ink underline-offset-4 hover:underline">
+              <button type="button" onClick={() => update({ unshared: false })} className="shrink-0 font-semibold text-copy underline-offset-4 hover:underline">
                 Hide them
               </button>
             </Banner>
@@ -263,9 +253,9 @@ export default function Explorer({
           {!data && !ds.error && <Skeletons />}
           {!data && ds.error && (
             <div className="grid place-items-center rounded-[26px] border border-black/[0.06] bg-white px-6 py-20 text-center">
-              <AlertCircle className="size-8 text-ink/40" />
+              <AlertCircle className="size-8 text-copy/40" />
               <p className="mt-4 font-display text-xl font-bold">Couldn&rsquo;t reach Google Sheets</p>
-              <p className="mt-2 max-w-md text-ink/55">{ds.error}. Check your connection and try again.</p>
+              <p className="mt-2 max-w-md text-copy/55">{ds.error}. Check your connection and try again.</p>
               <button
                 type="button"
                 onClick={ds.refresh}
@@ -278,7 +268,7 @@ export default function Explorer({
           {data && results.length === 0 && hidden > 0 && (
             <div className="grid place-items-center rounded-[26px] border border-dashed border-black/15 px-6 py-20 text-center">
               <p className="font-display text-2xl font-bold">No viewable copies for this search.</p>
-              <p className="mt-2 max-w-md text-ink/55">
+              <p className="mt-2 max-w-md text-copy/55">
                 {hidden.toLocaleString("en-IN")} matching {hidden === 1 ? "page points" : "pages point"} to PDFs that
                 aren&rsquo;t publicly shared on Google Drive.
               </p>
@@ -294,7 +284,7 @@ export default function Explorer({
           {data && results.length === 0 && hidden === 0 && (
             <div className="grid place-items-center rounded-[26px] border border-dashed border-black/15 px-6 py-20 text-center">
               <p className="font-display text-2xl font-bold">Nothing matches — yet.</p>
-              <p className="mt-2 max-w-md text-ink/55">Try fewer words, a thinker&rsquo;s surname, or clear a filter.</p>
+              <p className="mt-2 max-w-md text-copy/55">Try fewer words, a thinker&rsquo;s surname, or clear a filter.</p>
               <button
                 type="button"
                 onClick={reset}
@@ -305,7 +295,7 @@ export default function Explorer({
             </div>
           )}
           {data && results.length > 0 && (
-            <div className={`grid gap-3 transition-opacity ${stale ? "opacity-60" : ""}`}>
+            <div className={`grid grid-cols-[minmax(0,1fr)] gap-3 transition-opacity ${stale ? "opacity-60" : ""}`}>
               {results.slice(0, limit).map((r) => (
                 <AnswerCard key={r.id} row={r} words={words} onOpen={onOpen} />
               ))}
@@ -331,7 +321,7 @@ export default function Explorer({
 
 function Banner({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-black/[0.06] bg-white px-4 py-3 text-[13px] text-ink/60">
+    <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-black/[0.06] bg-white px-4 py-3 text-[13px] text-copy/60">
       {children}
     </div>
   );

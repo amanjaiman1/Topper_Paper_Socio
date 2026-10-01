@@ -62,7 +62,7 @@ export default function LinkHealth({ open, onClose }: { open: boolean; onClose: 
       <div className="relative flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-[28px] bg-paper shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-black/[0.06] bg-white px-6 py-5">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ink/40">Drive link health</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-copy/40">Drive link health</p>
             <h2 className="mt-1.5 font-display text-2xl font-bold tracking-[-0.02em]">
               {summary.ok} of {summary.total} copies are viewable
             </h2>
@@ -84,12 +84,12 @@ export default function LinkHealth({ open, onClose }: { open: boolean; onClose: 
             <Count n={summary.unknown} label="Not checked yet" />
           </div>
 
-          <p className="mt-5 text-[14px] leading-relaxed text-ink/60">
+          <p className="mt-5 text-[14px] leading-relaxed text-copy/60">
             For logged-out visitors, Google Drive treats these files as missing (&ldquo;Sorry, the file you have requested
             does not exist&rdquo;). That usually means the owner restricted sharing or removed them. They cover{" "}
-            <b className="text-ink">{summary.pages.toLocaleString("en-IN")}</b> indexed pages. To fix one, open it while
+            <b className="text-copy">{summary.pages.toLocaleString("en-IN")}</b> indexed pages. To fix one, open it while
             signed in as the owner and set{" "}
-            <b className="text-ink">
+            <b className="text-copy">
               Share <ChevronRight className="inline size-3.5 align-[-2px]" /> General access{" "}
               <ChevronRight className="inline size-3.5 align-[-2px]" /> Anyone with the link
             </b>
@@ -110,7 +110,7 @@ export default function LinkHealth({ open, onClose }: { open: boolean; onClose: 
               type="button"
               onClick={recheckBlocked}
               disabled={progress.checking || !summary.blocked.length}
-              className="inline-flex items-center gap-1.5 rounded-full border border-black/15 bg-white px-4 py-2.5 text-[13px] font-semibold text-ink/70 transition-colors hover:border-ink hover:text-ink disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-full border border-black/15 bg-white px-4 py-2.5 text-[13px] font-semibold text-copy/70 transition-colors hover:border-ink hover:text-copy disabled:opacity-40"
             >
               {progress.checking ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCw className="size-3.5" />}
               {progress.checking ? `Checking ${progress.done}/${progress.total}` : "Re-check now"}
@@ -122,7 +122,7 @@ export default function LinkHealth({ open, onClose }: { open: boolean; onClose: 
               <li key={b.name} className="flex items-center gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[14px] font-medium">{b.name}</p>
-                  <p className="text-[12px] text-ink/45">
+                  <p className="text-[12px] text-copy/45">
                     {b.topper} · {b.rows} indexed {b.rows === 1 ? "page" : "pages"}
                   </p>
                 </div>
@@ -130,14 +130,14 @@ export default function LinkHealth({ open, onClose }: { open: boolean; onClose: 
                   href={driveViewUrl(b.id)}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-semibold text-ink/55 transition-colors hover:bg-ink/5 hover:text-ink"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-semibold text-copy/55 transition-colors hover:bg-ink/5 hover:text-copy"
                 >
                   Drive <ArrowUpRight className="size-3" />
                 </a>
               </li>
             ))}
             {!summary.blocked.length && (
-              <li className="px-4 py-8 text-center text-[14px] text-ink/50">
+              <li className="px-4 py-8 text-center text-[14px] text-copy/50">
                 {summary.unknown ? "Still checking…" : "Every copy is publicly viewable."}
               </li>
             )}
@@ -152,7 +152,7 @@ function Count({ n, label, dark = false }: { n: number; label: string; dark?: bo
   return (
     <div className={`rounded-2xl px-3 py-4 ${dark ? "bg-ink text-white" : "border border-black/[0.06] bg-white"}`}>
       <p className="font-display text-3xl font-bold tabular-nums tracking-[-0.03em]">{n}</p>
-      <p className={`mt-1 text-[12px] ${dark ? "text-white/60" : "text-ink/50"}`}>{label}</p>
+      <p className={`mt-1 text-[12px] ${dark ? "text-white/60" : "text-copy/50"}`}>{label}</p>
     </div>
   );
 }
