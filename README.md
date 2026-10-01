@@ -1,64 +1,35 @@
-# Sociology Optional — Topper Answer Copies Viewer
+# Socio Top Paper
 
-A zero-dependency Node.js utility and interactive browser-based viewer for UPSC Sociology Optional topper answer copies. The script fetches curated question datasets from Google Sheets, parses and normalizes topper metadata, links each question to its original Google Drive PDF page, and compiles everything into a standalone HTML viewer.
+Search UPSC Sociology Optional topper answer copies by question, thinker, syllabus topic or topper, then open the exact page of the original copy on Google Drive.
 
-## Image
-<img width="1350" height="602" alt="image" src="https://github.com/user-attachments/assets/495507b1-073c-4129-b241-02ad86fa6e0c" />
+It's a front-end-only [Next.js](https://nextjs.org) app. Your browser reads the curated Google Sheet directly, so you don't need to run a Node script or server. Open the page and start searching.
 
 ## Features
 
-* **Zero Dependencies:** Built entirely with Node.js built-in modules (`http`, `https`, `fs`, `path`). No `npm install` or third-party packages required.
-* **Automatic Data Synchronization:** Fetches raw CSV tables directly from published Google Sheets endpoints and caches them locally.
-* **Smart Filename & Metadata Parsing:** Extracts topper names, AIR ranks, coaching institutes (VisionIAS, LevelupIAS, EdenIAS, etc.), and paper categorization (Paper I / Paper II) automatically.
-* **Interactive Client-Side Viewer (`viewer.html`):**
-  * Instant multi-field search across questions, toppers, syllabus topics, and thinkers.
-  * Filters for Paper I/II, specific toppers, questions only, and diagrams.
-  * Infinite/batched scrolling for smooth rendering across thousands of rows.
-  * Direct deep links to corresponding answer copy PDFs on Google Drive.
-* **Embedded Web Server:** Includes a lightweight built-in HTTP server to serve the compiled viewer locally.
+- **Live data**: the three sheet tabs are fetched straight from Google Sheets in your browser. A Web Worker parses about 9 MB of CSV off the main thread, removes duplicates across the two question sheets and caches the result in IndexedDB. Repeat visits load instantly, and the data refreshes in the background.
+- **Search**: multi-word search across questions, introductions, thinkers, concepts, syllabus, diagrams and toppers. Matching words are highlighted.
+- **Filters**: Paper I / II, syllabus section (matched to the official UPSC syllabus), topper, questions only, has diagram, and sorting by relevance, rank, name or page.
+- **Shareable searches**: filters are kept in the URL (`?q=weber&paper=1&questions=1`).
+- **In-page preview**: open any answer in a side panel with an embedded Drive preview, or go straight to Drive at the right page.
+- **Toppers and Thinkers**: browse toppers by All India Rank and the most-cited thinkers. Spelling variants are merged (e.g. "Agarwal" and "Agrawal").
+- Keyboard shortcuts: `/` or `⌘K` focuses search, and `Esc` closes the preview.
 
----
+## Develop
 
-## Prerequisites
-
-* **Node.js** (v14.0.0 or higher recommended)
-
----
-
-## Quick Start
-
-### Step 1: Install Node.js (One-Time Setup)
-This project runs using a free tool called **Node.js**.
-
-1. Visit [nodejs.org](https://nodejs.org/).
-2. Download the version labeled **LTS** (Long Term Support).
-3. Run the downloaded installer and keep clicking **Next** until it finishes.
-
----
-
-### Step 2: Download This Project
-1. Scroll to the top of this GitHub page.
-2. Click the green **Code** button and select **Download ZIP**.
-3. Locate the downloaded ZIP file on your computer, right-click it, and select **Extract All** (Windows) or double-click to unzip (Mac).
-
----
-
-### Step 3: Open the Project Folder in Terminal
-
-#### On Windows:
-1. Open the unzipped folder.
-2. Click on the folder's address bar at the top of File Explorer.
-3. Type `cmd` and press **Enter**. A black command window will open directly in this folder.
-
-#### On Mac:
-1. Open the unzipped folder in **Finder**.
-2. Right-click the folder (or hold `Control` and click).
-3. Select **New Terminal at Folder** (or open the Terminal app and drag the folder into it).
-
----
-
-### Step 4: Run the Viewer
-
-Copy and paste this command into your terminal/command window, then press **Enter**:
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # static export to ./out
 ```
-node socio.js
+
+## Deploy
+
+`.github/workflows/deploy.yml` builds the static site and publishes it to **GitHub Pages** on every push to `main`. Turn it on once under **Settings → Pages → Source: GitHub Actions**. The site will then be at `https://amanjaiman1.github.io/Topper_Paper_Socio/`.
+
+Because the output is static (`out/`), you can also host it on Vercel, Netlify or Cloudflare Pages without any config.
+
+## Data source
+
+You configure the sheet in `src/lib/dataset.ts` (`SHEET_ID`, `QUESTION_GIDS`, `DRIVE_GID`). The sheet must be shared as "Anyone with the link can view".
+
+The original zero-dependency Node script is kept for reference in `legacy/socio.js`.
