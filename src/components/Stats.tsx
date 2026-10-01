@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { resolveLink, useLinkProgress, useLinksSettled } from "@/lib/driveHealth";
 import type { Dataset } from "@/lib/types";
 
 function useCountUp(target: number, run: boolean) {
@@ -21,7 +22,7 @@ function useCountUp(target: number, run: boolean) {
   return v;
 }
 
-function Stat({ value, suffix = "", label, note, run }: { value: number; suffix?: string; label: string; note: string; run: boolean }) {
+function Stat({ value, suffix = "", label, note, run }: { value: number; suffix?: string; label: string; note: ReactNode; run: boolean }) {
   const n = useCountUp(value, run);
   return (
     <div className="group relative border-t border-ink/10 pt-6">
@@ -31,12 +32,26 @@ function Stat({ value, suffix = "", label, note, run }: { value: number; suffix?
         {value ? <span className="text-ink/30">{suffix}</span> : null}
       </p>
       <p className="mt-3 text-[15px] font-semibold">{label}</p>
-      <p className="mt-1 text-sm text-ink/50">{note}</p>
+      <div className="mt-1 text-sm text-ink/50">{note}</div>
     </div>
   );
 }
 
-export default function Stats({ data }: { data: Dataset | null }) {
+export default function Stats({ data, onHealth }: { data: Dataset | null; onHealth: () => void }) {
+  const settled = useLinksSettled();
+  const progress = useLinkProgress();
+  const health = useMemo(() => {
+    void settled;
+    let ok = 0;
+    let blocked = 0;
+    for (const f of data?.files ?? []) {
+      const st = resolveLink(f.ids).status;
+      if (st === "ok") ok++;
+      else if (st === "blocked") blocked++;
+    }
+    return { ok, blocked };
+  }, [data, settled]);
+
   const ref = useRef<HTMLDivElement>(null);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
@@ -66,7 +81,23 @@ export default function Stats({ data }: { data: Dataset | null }) {
         <Stat run={seen} value={s?.rows ?? 0} label="Indexed answer pages" note="De-duplicated across both sheets" />
         <Stat run={seen} value={s?.questions ?? 0} label="Questions with text" note="Searchable word-for-word" />
         <Stat run={seen} value={s?.toppers ?? 0} suffix="+" label="Toppers & aspirants" note="Ranked by AIR where known" />
-        <Stat run={seen} value={s?.pdfs ?? 0} label="Original answer copies" note="Linked straight to Google Drive" />
+        <Stat
+          run={seen}
+          value={s?.pdfs ?? 0}
+          label="Original answer copies"
+          note={
+            progress.checking && progress.total > 20 ? (
+              <>Checking Drive links… {progress.done}/{progress.total}</>
+            ) : health.ok + health.blocked > 0 ? (
+              <button type="button" onClick={onHealth} className="text-left underline-offset-4 hover:text-ink hover:underline">
+                <b className="font-semibold text-ink">{health.ok}</b> publicly viewable
+                {health.blocked > 0 && <> · {health.blocked} not shared</>}
+              </button>
+            ) : (
+              "Linked straight to Google Drive"
+            )
+          }
+        />
       </div>
     </section>
   );

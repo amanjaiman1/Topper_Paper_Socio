@@ -1,25 +1,34 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight, BookOpen, Loader2, Shapes, X } from "lucide-react";
+import { ArrowUpRight, BookOpen, EyeOff, Loader2, Shapes, X } from "lucide-react";
 import { drivePreviewUrl, driveViewUrl } from "@/lib/dataset";
 import { queryWords } from "@/lib/filters";
 import type { Row } from "@/lib/types";
 import { headline } from "./AnswerCard";
+import { useRowLink } from "./driveContext";
 import Highlight from "./Highlight";
 import { Avatar } from "./ui";
 
-export default function AnswerDrawer({ row, onClose, query }: { row: Row | null; onClose: () => void; query: string }) {
+export default function AnswerDrawer({
+  row,
+  onClose,
+  onTopper,
+  query,
+}: {
+  row: Row | null;
+  onClose: () => void;
+  onTopper: (topperKey: string) => void;
+  query: string;
+}) {
   // Keep the last row around during the exit animation.
   const [shown, setShown] = useState<Row | null>(row);
   const [open, setOpen] = useState(false);
-  const [frameLoaded, setFrameLoaded] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (row) {
       setShown(row);
-      setFrameLoaded(false);
       requestAnimationFrame(() => setOpen(true));
     } else {
       setOpen(false);
@@ -138,49 +147,106 @@ export default function AnswerDrawer({ row, onClose, query }: { row: Row | null;
           </div>
 
           {/* PDF preview */}
-          {r.driveId && (
-            <div className="px-3 pb-3 sm:px-4 sm:pb-4">
-              <div className="overflow-hidden rounded-[22px] border border-black/[0.06] bg-white">
-                <div className="flex items-center justify-between gap-3 border-b border-black/[0.06] px-4 py-3">
-                  <p className="truncate text-[13px] text-ink/55">
-                    {page ? (
-                      <>
-                        Answer is on <span className="font-semibold text-ink">page {page}</span> of this copy
-                      </>
-                    ) : (
-                      r.file
-                    )}
-                  </p>
-                  <a
-                    href={driveViewUrl(r.driveId)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[13px] font-semibold text-white transition-transform hover:scale-[1.03]"
-                  >
-                    Open in Drive <ArrowUpRight className="size-3.5" />
-                  </a>
-                </div>
-                <div className="relative h-[72vh] bg-paper-2">
-                  {!frameLoaded && (
-                    <div className="absolute inset-0 grid place-items-center text-ink/40">
-                      <Loader2 className="size-6 animate-spin" />
-                    </div>
-                  )}
-                  <iframe
-                    key={r.driveId}
-                    src={drivePreviewUrl(r.driveId)}
-                    title={`Answer copy — ${r.topper}`}
-                    className="relative size-full"
-                    allow="autoplay"
-                    loading="lazy"
-                    onLoad={() => setFrameLoaded(true)}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          <PdfPreview key={r.id} row={r} page={page} onTopper={onTopper} />
         </div>
       </aside>
+    </div>
+  );
+}
+
+function PdfPreview({ row: r, page, onTopper }: { row: Row; page: string; onTopper: (key: string) => void }) {
+  const link = useRowLink(r, true);
+  const [frameLoaded, setFrameLoaded] = useState(false);
+  // If the availability check is slow, stop waiting and just try the preview.
+  const [waited, setWaited] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setWaited(true), 3500);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!link.hasPdf) return null;
+  const blocked = link.status === "blocked";
+  const showFrame = link.status === "ok" || (link.status === "unknown" && waited);
+
+  return (
+    <div className="px-3 pb-3 sm:px-4 sm:pb-4">
+      <div className="overflow-hidden rounded-[22px] border border-black/[0.06] bg-white">
+        <div className="flex items-center justify-between gap-3 border-b border-black/[0.06] px-4 py-3">
+          <p className="truncate text-[13px] text-ink/55">
+            {page ? (
+              <>
+                Answer is on <span className="font-semibold text-ink">page {page}</span> of this copy
+              </>
+            ) : (
+              r.file
+            )}
+          </p>
+          {!blocked && (
+            <a
+              href={driveViewUrl(link.id)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[13px] font-semibold text-white transition-transform hover:scale-[1.03]"
+            >
+              Open in Drive <ArrowUpRight className="size-3.5" />
+            </a>
+          )}
+        </div>
+
+        {blocked ? (
+          <div className="grid place-items-center px-6 py-16 text-center">
+            <span className="grid size-14 place-items-center rounded-full bg-ink text-white">
+              <EyeOff className="size-6" />
+            </span>
+            <p className="mt-5 font-display text-xl font-bold tracking-[-0.01em]">This answer copy isn&rsquo;t publicly shared</p>
+            <p className="mt-2 max-w-md text-[14px] leading-relaxed text-ink/55">
+              Google Drive won&rsquo;t show this PDF to visitors. Its owner has restricted access or removed it, so it
+              can&rsquo;t be previewed here. The question, opening and thinkers above still come from the index.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {r.topperKey && (
+                <button
+                  type="button"
+                  onClick={() => onTopper(r.topperKey)}
+                  className="rounded-full bg-ink px-5 py-2.5 text-[13px] font-semibold text-white transition-transform hover:scale-[1.03]"
+                >
+                  More from {r.topper}
+                </button>
+              )}
+              <a
+                href={driveViewUrl(link.id)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-black/15 px-5 py-2.5 text-[13px] font-semibold text-ink/70 transition-colors hover:border-ink hover:text-ink"
+              >
+                Try in Drive anyway <ArrowUpRight className="size-3.5" />
+              </a>
+            </div>
+            <p className="mt-4 text-[12px] text-ink/40">&ldquo;Try anyway&rdquo; only works if your Google account has been given access.</p>
+          </div>
+        ) : (
+          <div className="relative h-[72vh] bg-paper-2">
+            {(!showFrame || !frameLoaded) && (
+              <div className="absolute inset-0 grid place-items-center text-ink/40">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="size-6 animate-spin" />
+                  {!showFrame && <p className="text-[13px]">Checking this copy on Google Drive…</p>}
+                </div>
+              </div>
+            )}
+            {showFrame && (
+              <iframe
+                key={link.id}
+                src={drivePreviewUrl(link.id)}
+                title={`Answer copy — ${r.topper}`}
+                className="relative size-full"
+                allow="autoplay"
+                onLoad={() => setFrameLoaded(true)}
+              />
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

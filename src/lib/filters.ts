@@ -9,6 +9,8 @@ export interface Filters {
   topper: string;
   onlyQ: boolean;
   onlyD: boolean;
+  /** Also show pages whose answer-copy PDF isn't publicly viewable on Drive. */
+  unshared: boolean;
   sort: SortKey;
 }
 
@@ -19,6 +21,7 @@ export const EMPTY_FILTERS: Filters = {
   topper: "",
   onlyQ: false,
   onlyD: false,
+  unshared: false,
   sort: "default",
 };
 
@@ -29,9 +32,15 @@ export const queryWords = (q: string) =>
     .split(/\s+/)
     .filter(Boolean);
 
-export function applyFilters(rows: Row[], f: Filters): Row[] {
+/**
+ * @param blockedFiles file names whose PDF is known to be unavailable — hidden unless `f.unshared`.
+ * @returns matching rows plus how many matches were hidden because their PDF is unavailable.
+ */
+export function applyFilters(rows: Row[], f: Filters, blockedFiles?: Set<string>): { rows: Row[]; hidden: number } {
   const words = queryWords(f.q);
+  const hideBlocked = !f.unshared && !!blockedFiles?.size;
   const out: Row[] = [];
+  let hidden = 0;
   outer: for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     if (f.onlyQ && !r.question) continue;
@@ -40,6 +49,10 @@ export function applyFilters(rows: Row[], f: Filters): Row[] {
     if (f.section && r.section !== f.section) continue;
     if (f.topper && r.topperKey !== f.topper) continue;
     for (let j = 0; j < words.length; j++) if (r.search.indexOf(words[j]) === -1) continue outer;
+    if (hideBlocked && blockedFiles!.has(r.file)) {
+      hidden++;
+      continue;
+    }
     out.push(r);
   }
 
@@ -51,11 +64,11 @@ export function applyFilters(rows: Row[], f: Filters): Row[] {
     // Surface rows that actually have question text first when searching.
     out.sort((a, b) => Number(!!b.question) - Number(!!a.question) || a.id - b.id);
   }
-  return out;
+  return { rows: out, hidden };
 }
 
 export const activeFilterCount = (f: Filters) =>
-  [f.q, f.paper, f.section, f.topper, f.onlyQ, f.onlyD, f.sort !== "default"].filter(Boolean).length;
+  [f.q, f.paper, f.section, f.topper, f.onlyQ, f.onlyD, f.unshared, f.sort !== "default"].filter(Boolean).length;
 
 // ─── URL sync (shareable links) ──────────────────────────────────────────────
 
@@ -67,6 +80,7 @@ export function filtersToSearch(f: Filters): string {
   if (f.topper) p.set("topper", f.topper);
   if (f.onlyQ) p.set("questions", "1");
   if (f.onlyD) p.set("diagrams", "1");
+  if (f.unshared) p.set("unshared", "1");
   if (f.sort !== "default") p.set("sort", f.sort);
   const s = p.toString();
   return s ? `?${s}` : "";
@@ -82,6 +96,7 @@ export function filtersFromSearch(search: string): Filters {
     topper: p.get("topper") ?? "",
     onlyQ: p.get("questions") === "1",
     onlyD: p.get("diagrams") === "1",
+    unshared: p.get("unshared") === "1",
     sort: sort && ["air", "topper", "page"].includes(sort) ? sort : "default",
   };
 }

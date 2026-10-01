@@ -1,4 +1,4 @@
-import type { Dataset, Row, Thinker, Topper } from "./types";
+import type { Dataset, DriveFile, Row, Thinker, Topper } from "./types";
 import { classifySection, detectPaper, stripPaper } from "./syllabus";
 
 export const SHEET_ID = "16QR2YCunO5tem8yf2viqNl4R39YjDgLfPE7glouAkKo";
@@ -11,6 +11,8 @@ export const sheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}`;
 export const REPO_URL = "https://github.com/amanjaiman1/Topper_Paper_Socio";
 export const driveViewUrl = (id: string) => `https://drive.google.com/file/d/${id}/view`;
 export const drivePreviewUrl = (id: string) => `https://drive.google.com/file/d/${id}/preview`;
+/** Small thumbnail — loads as an image only when the file is publicly viewable (used for link checks). */
+export const driveThumbUrl = (id: string) => `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w32`;
 
 export const UNATTRIBUTED = "__unattributed";
 
@@ -178,11 +180,18 @@ const topVote = (m: Map<string, number>) => {
 };
 
 export function buildDataset(questionCsvs: string[], driveCsv: string): Dataset {
-  const driveMap = new Map<string, string>();
+  // A file name can appear more than once in the Links tab with different IDs (often one dead, one live),
+  // so keep every candidate in sheet order and pick the reachable one at view time.
+  const driveMap = new Map<string, string[]>();
   const driveRows = parseCSV(driveCsv);
   for (let i = 1; i < driveRows.length; i++) {
     const r = driveRows[i];
-    if (r.length >= 2 && r[0].trim() && r[1].trim()) driveMap.set(r[0].trim(), r[1].trim());
+    const name = (r[0] || "").trim();
+    const id = (r[1] || "").trim();
+    if (!name || !/^[\w-]{20,}$/.test(id)) continue;
+    const ids = driveMap.get(name);
+    if (!ids) driveMap.set(name, [id]);
+    else if (!ids.includes(id)) ids.push(id);
   }
 
   const rows: Row[] = [];
@@ -251,7 +260,7 @@ export function buildDataset(questionCsvs: string[], driveCsv: string): Dataset 
         paper,
         section: classifySection(syllabus, paper),
         topic: syllabus ? stripPaper(syllabus) : "",
-        driveId: driveMap.get(file) || "",
+        driveId: driveMap.get(file)?.[0] ?? "",
         search: "",
       });
     }
@@ -332,6 +341,16 @@ export function buildDataset(questionCsvs: string[], driveCsv: string): Dataset 
 
   const sections = [...sectionMap.values()];
 
+  const fileRows = new Map<string, number>();
+  for (const r of rows) fileRows.set(r.file, (fileRows.get(r.file) || 0) + 1);
+  const files: DriveFile[] = [...fileRows.entries()]
+    .filter(([name]) => driveMap.has(name))
+    .map(([name, n]) => {
+      const info = fileInfo.get(name)!;
+      return { name, ids: driveMap.get(name)!, topper: groups.get(info.key)!.name, topperKey: info.key, rows: n };
+    })
+    .sort((a, b) => b.rows - a.rows);
+
   const thinkers = [...thinkerMap.entries()]
     .map(([key, e]) => {
       // Prefer the most common multi-word variant ("Emile Durkheim" over "Durkheim").
@@ -348,11 +367,12 @@ export function buildDataset(questionCsvs: string[], driveCsv: string): Dataset 
     toppers,
     sections,
     thinkers,
+    files,
     stats: {
       rows: rows.length,
       questions,
       toppers: toppers.filter((t) => t.key !== UNATTRIBUTED).length,
-      pdfs: driveMap.size,
+      pdfs: files.length,
       linked,
       paper1,
       paper2,

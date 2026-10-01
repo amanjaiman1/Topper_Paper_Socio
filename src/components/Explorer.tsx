@@ -1,12 +1,14 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, Check, Link2, RotateCcw, Search, X } from "lucide-react";
+import { AlertCircle, Check, EyeOff, Link2, Loader2, RotateCcw, Search, X } from "lucide-react";
+import { useLinkProgress } from "@/lib/driveHealth";
 import { activeFilterCount, applyFilters, queryWords, type Filters, type SortKey } from "@/lib/filters";
 import { SECTION_ORDER } from "@/lib/syllabus";
 import type { DatasetState } from "@/lib/useDataset";
 import type { Row } from "@/lib/types";
 import AnswerCard from "./AnswerCard";
+import { useBlockedFiles } from "./driveContext";
 import SyncStatus from "./SyncStatus";
 import { Segmented, Select, Toggle } from "./ui";
 
@@ -20,16 +22,23 @@ export default function Explorer({
   update,
   reset,
   onOpen,
+  onHealth,
 }: {
   ds: DatasetState;
   filters: Filters;
   update: (p: Partial<Filters>) => void;
   reset: () => void;
   onOpen: (r: Row) => void;
+  onHealth: () => void;
 }) {
   const data = ds.data;
   const deferred = useDeferredValue(filters);
-  const results = useMemo(() => (data ? applyFilters(data.rows, deferred) : []), [data, deferred]);
+  const blocked = useBlockedFiles();
+  const progress = useLinkProgress();
+  const { rows: results, hidden } = useMemo(
+    () => (data ? applyFilters(data.rows, deferred, blocked) : { rows: [] as Row[], hidden: 0 }),
+    [data, deferred, blocked],
+  );
   const words = useMemo(() => queryWords(deferred.q), [deferred.q]);
   const stale = deferred !== filters;
 
@@ -211,8 +220,44 @@ export default function Explorer({
                 </button>
               </div>
             )}
-
           </div>
+
+          {/* Drive link health */}
+          {data && progress.checking && progress.total > 20 ? (
+            <Banner>
+              <Loader2 className="size-4 shrink-0 animate-spin" />
+              <span>
+                Checking which answer copies are publicly viewable on Google Drive…{" "}
+                <span className="tabular-nums text-ink/40">
+                  {progress.done}/{progress.total}
+                </span>
+              </span>
+            </Banner>
+          ) : data && hidden > 0 && !filters.unshared ? (
+            <Banner>
+              <EyeOff className="size-4 shrink-0" />
+              <span className="min-w-0 flex-1 basis-[220px]">
+                Hiding <b className="font-semibold text-ink">{hidden.toLocaleString("en-IN")}</b> matching pages whose PDF
+                isn&rsquo;t publicly shared on Google Drive.
+              </span>
+              <span className="flex shrink-0 gap-3">
+                <button type="button" onClick={() => update({ unshared: true })} className="font-semibold text-ink underline-offset-4 hover:underline">
+                  Show them
+                </button>
+                <button type="button" onClick={onHealth} className="font-semibold text-ink/60 underline-offset-4 hover:text-ink hover:underline">
+                  Which copies?
+                </button>
+              </span>
+            </Banner>
+          ) : data && filters.unshared && blocked.size > 0 ? (
+            <Banner>
+              <EyeOff className="size-4 shrink-0" />
+              <span className="min-w-0 flex-1 basis-[220px]">Including pages whose PDF isn&rsquo;t publicly shared — their links won&rsquo;t open.</span>
+              <button type="button" onClick={() => update({ unshared: false })} className="shrink-0 font-semibold text-ink underline-offset-4 hover:underline">
+                Hide them
+              </button>
+            </Banner>
+          ) : null}
 
           {/* Results */}
           {!data && !ds.error && <Skeletons />}
@@ -230,7 +275,23 @@ export default function Explorer({
               </button>
             </div>
           )}
-          {data && results.length === 0 && (
+          {data && results.length === 0 && hidden > 0 && (
+            <div className="grid place-items-center rounded-[26px] border border-dashed border-black/15 px-6 py-20 text-center">
+              <p className="font-display text-2xl font-bold">No viewable copies for this search.</p>
+              <p className="mt-2 max-w-md text-ink/55">
+                {hidden.toLocaleString("en-IN")} matching {hidden === 1 ? "page points" : "pages point"} to PDFs that
+                aren&rsquo;t publicly shared on Google Drive.
+              </p>
+              <button
+                type="button"
+                onClick={() => update({ unshared: true })}
+                className="mt-6 rounded-full bg-ink px-6 py-3 text-sm font-semibold text-white"
+              >
+                Show them anyway
+              </button>
+            </div>
+          )}
+          {data && results.length === 0 && hidden === 0 && (
             <div className="grid place-items-center rounded-[26px] border border-dashed border-black/15 px-6 py-20 text-center">
               <p className="font-display text-2xl font-bold">Nothing matches — yet.</p>
               <p className="mt-2 max-w-md text-ink/55">Try fewer words, a thinker&rsquo;s surname, or clear a filter.</p>
@@ -265,6 +326,14 @@ export default function Explorer({
         </div>
       </div>
     </section>
+  );
+}
+
+function Banner({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-black/[0.06] bg-white px-4 py-3 text-[13px] text-ink/60">
+      {children}
+    </div>
   );
 }
 

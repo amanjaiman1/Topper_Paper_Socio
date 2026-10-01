@@ -4,7 +4,7 @@ import type { Dataset, WorkerOut } from "./types";
 
 const DB_NAME = "socio-top-paper";
 const STORE = "dataset";
-const KEY = "v4";
+const KEY = "v5";
 
 const post = (msg: WorkerOut) => (self as unknown as Worker).postMessage(msg);
 

@@ -12,11 +12,14 @@ import Thinkers from "./Thinkers";
 import Toppers from "./Toppers";
 import Footer from "./Footer";
 import AnswerDrawer from "./AnswerDrawer";
+import { DriveFilesProvider } from "./driveContext";
+import LinkHealth from "./LinkHealth";
 
 export default function App() {
   const ds = useDataset();
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [active, setActive] = useState<Row | null>(null);
+  const [healthOpen, setHealthOpen] = useState(false);
 
   // Restore filters from the URL once on mount, then keep the URL in sync (shareable links).
   const [hydrated, setHydrated] = useState(false);
@@ -29,6 +32,9 @@ export default function App() {
     const url = `${window.location.pathname}${filtersToSearch(filters)}${window.location.hash}`;
     window.history.replaceState(null, "", url);
   }, [filters, hydrated]);
+
+  const closeDrawer = useCallback(() => setActive(null), []);
+  const closeHealth = useCallback(() => setHealthOpen(false), []);
 
   const update = useCallback((patch: Partial<Filters>) => setFilters((f) => ({ ...f, ...patch })), []);
 
@@ -53,17 +59,33 @@ export default function App() {
   }, [jumpToExplorer]);
 
   return (
-    <>
+    <DriveFilesProvider data={ds.data}>
       <Nav onSearch={() => jumpToExplorer(undefined, true)} />
       <main>
         <Hero ds={ds} onExplore={() => jumpToExplorer(undefined, true)} onSearch={(q) => jumpToExplorer({ q, onlyQ: true })} />
-        <Stats data={ds.data} />
-        <Explorer ds={ds} filters={filters} update={update} reset={() => setFilters(EMPTY_FILTERS)} onOpen={setActive} />
+        <Stats data={ds.data} onHealth={() => setHealthOpen(true)} />
+        <Explorer
+          ds={ds}
+          filters={filters}
+          update={update}
+          reset={() => setFilters(EMPTY_FILTERS)}
+          onOpen={setActive}
+          onHealth={() => setHealthOpen(true)}
+        />
         <Thinkers data={ds.data} onPick={(q) => jumpToExplorer({ q })} />
         <Toppers data={ds.data} onPick={(topper) => jumpToExplorer({ topper })} />
       </main>
       <Footer onExplore={() => jumpToExplorer(undefined, true)} />
-      <AnswerDrawer row={active} onClose={() => setActive(null)} query={filters.q} />
-    </>
+      <AnswerDrawer
+        row={active}
+        onClose={closeDrawer}
+        onTopper={(topper) => {
+          setActive(null);
+          jumpToExplorer({ topper });
+        }}
+        query={filters.q}
+      />
+      <LinkHealth open={healthOpen} onClose={closeHealth} />
+    </DriveFilesProvider>
   );
 }

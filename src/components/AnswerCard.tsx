@@ -1,9 +1,10 @@
 "use client";
 
 import { memo } from "react";
-import { ArrowUpRight, Eye, Shapes } from "lucide-react";
+import { ArrowUpRight, Eye, EyeOff, Shapes } from "lucide-react";
 import { driveViewUrl } from "@/lib/dataset";
 import type { Row } from "@/lib/types";
+import { useRowLink } from "./driveContext";
 import Highlight from "./Highlight";
 import { Avatar } from "./ui";
 
@@ -13,6 +14,8 @@ export const headline = (r: Row) =>
 function AnswerCardImpl({ row: r, words, onOpen }: { row: Row; words: string[]; onOpen: (r: Row) => void }) {
   const hasQ = Boolean(r.question);
   const extra = r.thinkers.length - 4;
+  const link = useRowLink(r, true);
+  const pageLabel = r.page && /^\d+$/.test(r.page) ? `Open · Pg ${r.page}` : "Open PDF";
 
   return (
     <article
@@ -85,19 +88,31 @@ function AnswerCardImpl({ row: r, words, onOpen }: { row: Row; words: string[]; 
 
       {/* Actions */}
       <div className="flex items-center gap-2 md:flex-col md:items-end md:justify-between">
-        {r.driveId ? (
+        {!link.hasPdf ? (
+          <span className="text-[13px] text-ink/35">No PDF</span>
+        ) : link.status === "blocked" ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen(r);
+            }}
+            title="The owner hasn't shared this PDF publicly on Google Drive"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-dashed border-black/20 px-4 py-2.5 text-[13px] font-semibold text-ink/45 transition-colors hover:border-ink/40 hover:text-ink/70"
+          >
+            <EyeOff className="size-3.5" /> PDF not shared
+          </button>
+        ) : (
           <a
-            href={driveViewUrl(r.driveId)}
+            href={driveViewUrl(link.id)}
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
             className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-4 py-2.5 text-[13px] font-semibold text-white transition-transform hover:scale-[1.03] active:scale-95"
           >
-            {r.page && /^\d+$/.test(r.page) ? `Open · Pg ${r.page}` : "Open PDF"}
+            {pageLabel}
             <ArrowUpRight className="size-3.5" />
           </a>
-        ) : (
-          <span className="text-[13px] text-ink/35">No PDF</span>
         )}
         <button
           type="button"
